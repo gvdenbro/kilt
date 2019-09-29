@@ -37,7 +37,7 @@ dependencies {
 gradlePlugin {
     // Define the plugin
     val greeting by plugins.creating {
-        id = "be.gvdenbro.kilt.greeting"
+        id = "be.gvdenbro.kilt"
         implementationClass = "be.gvdenbro.kilt.KiltPlugin"
     }
 }
