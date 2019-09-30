@@ -1,4 +1,4 @@
-package be.gvdenbro.kilt.git
+package be.gvdenbro.kilt
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
