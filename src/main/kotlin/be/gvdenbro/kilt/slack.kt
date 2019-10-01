@@ -5,9 +5,6 @@ import org.gradle.api.tasks.TaskAction
 import java.net.HttpURLConnection
 import java.net.URL
 
-/**
- *  curl -X POST -H 'Content-type: application/json' --data "{'text': 'test', 'attachments': [{'fallback': 'blah','title': 'test','title_link': 'test','ts': 0}]}" https://hooks.slack.com/services/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
- */
 open class SlackPostToChannelTask : DefaultTask() {
 
     lateinit var slackHookURL: URL
@@ -25,6 +22,7 @@ open class SlackPostToChannelTask : DefaultTask() {
         connection.requestMethod = "POST"
         connection.setRequestProperty("Content-type", "application/json")
         connection.doOutput = true
+        connection.connectTimeout = 10000
 
         val body = body(text, title, titleLink).toByteArray()
 
