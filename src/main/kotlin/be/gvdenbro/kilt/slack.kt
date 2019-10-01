@@ -15,7 +15,7 @@ open class SlackPostToChannelTask : DefaultTask() {
     @TaskAction
     fun post() {
 
-        println("Posting to slack")
+        logger.info("Posting to slack")
 
         val connection = slackHookURL.openConnection() as HttpURLConnection
 
@@ -30,7 +30,7 @@ open class SlackPostToChannelTask : DefaultTask() {
             it.write(body)
         }
 
-        println("Posted to slack with response code ${connection.responseCode}")
+        logger.info("Posted to slack with response code ${connection.responseCode}")
     }
 
     fun body(text: String, title: String, titleLink: URL): String {

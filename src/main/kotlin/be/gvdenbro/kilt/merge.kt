@@ -26,7 +26,7 @@ open class GitMergeTask : DefaultTask() {
 
     fun assertIsMergeable() {
 
-        println("Checking if source ${source} can be merged into ${destination}")
+        logger.info("Checking if source ${source} can be merged into ${destination}")
 
         fetch(destination)
         val mergeBase: String = mergeBase("FETCH_HEAD", source)
@@ -36,12 +36,12 @@ open class GitMergeTask : DefaultTask() {
             throw GradleException("Conflicts detected between source [${source}] and destination [${destination}]. Please merge manually. Merge tree:\n${mergeTree}")
         }
 
-        println("Source ${source} can be merged into ${destination}")
+        logger.info("Source ${source} can be merged into ${destination}")
     }
 
     private fun fetch(destination: String) {
 
-        println("Fetching ${destination}")
+        logger.info("Fetching ${destination}")
 
         val fetchStdout = ByteArrayOutputStream()
 
@@ -51,13 +51,13 @@ open class GitMergeTask : DefaultTask() {
             it.standardOutput = fetchStdout
         }
 
-        println(fetchStdout.toString())
-        println("${destination} fetched")
+        logger.info(fetchStdout.toString())
+        logger.info("${destination} fetched")
     }
 
     private fun mergeBase(commit1: String, commit2: String): String {
 
-        println("Looking for merge base between ${commit1} and ${commit2}")
+        logger.info("Looking for merge base between ${commit1} and ${commit2}")
 
         val mergeBaseStdout = ByteArrayOutputStream()
 
@@ -69,14 +69,14 @@ open class GitMergeTask : DefaultTask() {
 
         val mergeBase = mergeBaseStdout.toString().trim()
 
-        println("Found merge base ${mergeBase} between ${commit1} and ${commit2}")
+        logger.info("Found merge base ${mergeBase} between ${commit1} and ${commit2}")
 
         return mergeBase
     }
 
     private fun mergeTree(baseTree: String, branch1: String, branch2: String): String {
 
-        println("Calculating merge tree from ${baseTree} between ${branch1} and ${branch2}")
+        logger.info("Calculating merge tree from ${baseTree} between ${branch1} and ${branch2}")
 
         val mergeTreeStdout = ByteArrayOutputStream()
 
@@ -91,7 +91,7 @@ open class GitMergeTask : DefaultTask() {
 
     private fun checkout(branch: String) {
 
-        println("Checking out ${branch}")
+        logger.info("Checking out ${branch}")
 
         val checkoutStdout = ByteArrayOutputStream()
 
@@ -101,13 +101,13 @@ open class GitMergeTask : DefaultTask() {
             it.standardOutput = checkoutStdout
         }
 
-        println(checkoutStdout.toString())
-        println("${branch} checked out")
+        logger.info(checkoutStdout.toString())
+        logger.info("${branch} checked out")
     }
 
     private fun merge(branch: String) {
 
-        println("Merging ${branch}")
+        logger.info("Merging ${branch}")
 
         val mergeStdout = ByteArrayOutputStream()
 
@@ -117,13 +117,13 @@ open class GitMergeTask : DefaultTask() {
             it.standardOutput = mergeStdout
         }
 
-        println(mergeStdout.toString())
-        println("${branch} merged")
+        logger.info(mergeStdout.toString())
+        logger.info("${branch} merged")
     }
 
     private fun push(branch: String) {
 
-        println("Pushing ${branch}")
+        logger.info("Pushing ${branch}")
 
         val pushStdout = ByteArrayOutputStream()
 
@@ -133,7 +133,7 @@ open class GitMergeTask : DefaultTask() {
             it.standardOutput = pushStdout
         }
 
-        println(pushStdout.toString())
-        println("${branch} pushed")
+        logger.info(pushStdout.toString())
+        logger.info("${branch} pushed")
     }
 }
