@@ -1,14 +1,21 @@
 package be.gvdenbro.kilt
 
+import com.beust.klaxon.Klaxon
 import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.TaskAction
 import java.net.HttpURLConnection
 import java.net.URL
 
+data class SlackMessage(val attachments: List<SlackMessageAttachment>)
+data class SlackMessageAttachment(val title: String, val title_link: URL, val text: String, val color: String)
+
 open class SlackPostToChannelTask : DefaultTask() {
+
+    private val klaxon: Klaxon = Klaxon()
 
     lateinit var slackHookURL: URL
     lateinit var text: String
+    lateinit var color: String
     lateinit var title: String
     lateinit var titleLink: URL
 
@@ -24,25 +31,12 @@ open class SlackPostToChannelTask : DefaultTask() {
         connection.doOutput = true
         connection.connectTimeout = 10000
 
-        val body = body(text, title, titleLink).toByteArray()
+        val slackMessage = SlackMessage(attachments = listOf(SlackMessageAttachment(title = title, title_link = titleLink, text = text, color = color)))
 
         connection.outputStream.use {
-            it.write(body)
+            it.write(klaxon.toJsonString(slackMessage).toByteArray())
         }
 
-        logger.info("Posted to slack with response code ${connection.responseCode}")
-    }
-
-    fun body(text: String, title: String, titleLink: URL): String {
-        return """{
-                    "text": "$text",
-                    "attachments": [
-                        {
-                            "fallback": "blah",
-                            "title": "$title",
-                            "title_link": "$titleLink"
-                        }
-                    ]
-                }"""
+        logger.info("Posted to slack message ${slackMessage} with response code ${connection.responseCode}")
     }
 }
