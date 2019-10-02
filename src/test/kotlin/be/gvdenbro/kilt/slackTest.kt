@@ -9,7 +9,7 @@ class KlaxonTests {
     @Test
     fun klaxonMessage() {
 
-        val slackMessage = SlackMessage(text = "text", attachments = listOf(SlackMessageAttachment(title = "title", title_link = URL("https://tool.gocd-server.d00sv179:6666/go/tab/build/detail/QA-ztest/10/merge/1/merge"))))
+        val slackMessage = SlackMessage(attachments = listOf(SlackMessageAttachment(text = "text", pretext = "pretext", title = "title", title_link = URL("https://tool.gocd-server.d00sv179:6666/go/tab/build/detail/QA-ztest/10/merge/1/merge"), color = "good")))
         val toJsonString = Klaxon().toJsonString(slackMessage)
 
         println(toJsonString)

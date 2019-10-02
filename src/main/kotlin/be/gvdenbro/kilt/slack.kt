@@ -7,17 +7,18 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 data class SlackMessage(val attachments: List<SlackMessageAttachment>)
-data class SlackMessageAttachment(val title: String, val title_link: URL, val text: String, val color: String)
+data class SlackMessageAttachment(val title: String, val title_link: URL, val pretext: String, val text: String, val color: String)
 
 open class SlackPostToChannelTask : DefaultTask() {
 
     private val klaxon: Klaxon = Klaxon()
 
     lateinit var slackHookURL: URL
-    lateinit var text: String
-    lateinit var color: String
     lateinit var title: String
     lateinit var titleLink: URL
+    lateinit var pretext: String
+    lateinit var text: String
+    lateinit var color: String
 
     @TaskAction
     fun post() {
@@ -31,7 +32,7 @@ open class SlackPostToChannelTask : DefaultTask() {
         connection.doOutput = true
         connection.connectTimeout = 10000
 
-        val slackMessage = SlackMessage(attachments = listOf(SlackMessageAttachment(title = title, title_link = titleLink, text = text, color = color)))
+        val slackMessage = SlackMessage(attachments = listOf(SlackMessageAttachment(title = title, title_link = titleLink, pretext = pretext, text = text, color = color)))
 
         connection.outputStream.use {
             it.write(klaxon.toJsonString(slackMessage).toByteArray())
