@@ -3,7 +3,7 @@ plugins {
 }
 
 group = "be.gvdenbro"
-version = "0.0.23"
+version = "0.0.25"
 
 repositories {
     jcenter()

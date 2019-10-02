@@ -3,6 +3,7 @@ package be.gvdenbro.kilt
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecResult
 import org.gradle.process.internal.ExecException
 import java.io.ByteArrayOutputStream
 
@@ -50,25 +51,14 @@ open class GitMergeTask : DefaultTask() {
     }
 
     private fun revision(source: String): String {
-        // git rev-parse HEAD
+
         logger.info("Getting revision of ${source}")
 
-        val revisionStdout = ByteArrayOutputStream()
-        val revisionStderr = ByteArrayOutputStream()
-
-        val exec = project.exec {
-            it.isIgnoreExitValue = true
-            it.commandLine("git", "rev-parse", "HEAD")
-            it.workingDir = project.rootDir
-            it.standardOutput = revisionStdout
-            it.errorOutput = revisionStderr
-        }
+        val (exec, revision, stderr) = execute("git", "rev-parse", "--short", "HEAD")
 
         if (exec.exitValue != 0) {
-            throw ExecException("Couldn't get revsion of ${source}: $revisionStderr")
+            throw ExecException("Couldn't get revsion of ${source}: $stderr")
         }
-
-        val revision = revisionStdout.toString().trim()
 
         logger.info("${source} is at revision ${revision}")
 
@@ -79,22 +69,13 @@ open class GitMergeTask : DefaultTask() {
 
         logger.info("Fetching ${destination}")
 
-        val fetchStdout = ByteArrayOutputStream()
-        val fetchStderr = ByteArrayOutputStream()
-
-        val exec = project.exec {
-            it.isIgnoreExitValue = true
-            it.commandLine("git", "fetch", "origin", destination)
-            it.workingDir = project.rootDir
-            it.standardOutput = fetchStdout
-            it.errorOutput = fetchStderr
-        }
+        val (exec, stdout, stderr) = execute("git", "fetch", "origin", destination)
 
         if (exec.exitValue != 0) {
-            throw ExecException("Couldn't fetch origin/$destination: $fetchStderr")
+            throw ExecException("Couldn't fetch origin/$destination: $stderr")
         }
 
-        logger.info(fetchStdout.toString().trim())
+        logger.info(stdout)
         logger.info("${destination} fetched")
     }
 
@@ -102,22 +83,11 @@ open class GitMergeTask : DefaultTask() {
 
         logger.info("Looking for merge base between ${commit1} and ${commit2}")
 
-        val mergeBaseStdout = ByteArrayOutputStream()
-        val mergeBaseStderr = ByteArrayOutputStream()
-
-        val exec = project.exec {
-            it.isIgnoreExitValue = true
-            it.commandLine("git", "merge-base", commit1, commit2)
-            it.workingDir = project.rootDir
-            it.standardOutput = mergeBaseStdout
-            it.errorOutput = mergeBaseStderr
-        }
+        val (exec, mergeBaseOut, stderr) = execute("git", "merge-base", commit1, commit2)
 
         if (exec.exitValue != 0) {
-            throw ExecException("Couldn't merge-base $commit1 $commit2: $mergeBaseStderr")
+            throw ExecException("Couldn't merge-base $commit1 $commit2: $stderr")
         }
-
-        val mergeBaseOut = mergeBaseStdout.toString().trim()
 
         logger.info("Found merge base ${mergeBaseOut} between ${commit1} and ${commit2}")
 
@@ -128,41 +98,23 @@ open class GitMergeTask : DefaultTask() {
 
         logger.info("Calculating merge tree from ${baseTree} between ${branch1} and ${branch2}")
 
-        val mergeTreeStdout = ByteArrayOutputStream()
-        val mergeTreeStderr = ByteArrayOutputStream()
-
-        val exec = project.exec {
-            it.isIgnoreExitValue = true
-            it.commandLine("git", "merge-tree", baseTree, branch1, branch2)
-            it.workingDir = project.rootDir
-            it.standardOutput = mergeTreeStdout
-            it.errorOutput = mergeTreeStderr
-        }
+        val (exec, mergeTreeStdout, stderr) = execute("git", "merge-tree", baseTree, branch1, branch2)
 
         if (exec.exitValue != 0) {
-            throw ExecException("Couldn't merge-tree $branch1 $branch2: $mergeTreeStderr")
+            throw ExecException("Couldn't merge-tree $branch1 $branch2: $stderr")
         }
 
-        return mergeTreeStdout.toString().trim()
+        return mergeTreeStdout
     }
 
     private fun config(key: String, value: String) {
 
         logger.info("Configuring ${key} to $value")
 
-        val configStdout = ByteArrayOutputStream()
-        val configStderr = ByteArrayOutputStream()
-
-        val exec = project.exec {
-            it.isIgnoreExitValue = true
-            it.commandLine("git", "config", key, """"$value"""")
-            it.workingDir = project.rootDir
-            it.standardOutput = configStdout
-            it.errorOutput = configStderr
-        }
+        val (exec, _, stderr) = execute("git", "config", key, """"$value"""")
 
         if (exec.exitValue != 0) {
-            throw ExecException("Couldn't set config $key with value $value: $configStderr")
+            throw ExecException("Couldn't set config $key with value $value: $stderr")
         }
 
         logger.info("Configured $key to $value")
@@ -172,22 +124,13 @@ open class GitMergeTask : DefaultTask() {
 
         logger.info("Checking out ${branch}")
 
-        val checkoutStdout = ByteArrayOutputStream()
-        val checkoutStderr = ByteArrayOutputStream()
-
-        val exec = project.exec {
-            it.isIgnoreExitValue = true
-            it.commandLine("git", "checkout", branch)
-            it.workingDir = project.rootDir
-            it.standardOutput = checkoutStdout
-            it.errorOutput = checkoutStderr
-        }
+        val (exec, stdout, stderr) = execute("git", "checkout", branch)
 
         if (exec.exitValue != 0) {
-            throw ExecException("Couldn't checkout $branch: $checkoutStderr")
+            throw ExecException("Couldn't checkout $branch: $stderr")
         }
 
-        logger.info(checkoutStdout.toString().trim())
+        logger.info(stdout)
         logger.info("${branch} checked out")
     }
 
@@ -195,22 +138,13 @@ open class GitMergeTask : DefaultTask() {
 
         logger.info("Merging ${branch}")
 
-        val mergeStdout = ByteArrayOutputStream()
-        val mergeStderr = ByteArrayOutputStream()
-
-        val exec = project.exec {
-            it.isIgnoreExitValue = true
-            it.commandLine("git", "merge", branch)
-            it.workingDir = project.rootDir
-            it.standardOutput = mergeStdout
-            it.errorOutput = mergeStderr
-        }
+        val (exec, stdout, stderr) = execute("git", "merge", branch)
 
         if (exec.exitValue != 0) {
-            throw ExecException("Couldn't merge $branch: $mergeStderr")
+            throw ExecException("Couldn't merge $branch: $stderr")
         }
 
-        logger.info(mergeStdout.toString().trim())
+        logger.info(stdout)
         logger.info("${branch} merged")
     }
 
@@ -218,22 +152,31 @@ open class GitMergeTask : DefaultTask() {
 
         logger.info("Pushing ${branch}")
 
-        val pushStdout = ByteArrayOutputStream()
-        val pushStderr = ByteArrayOutputStream()
+        val (exec, stdout, stderr) = execute("git", "push", "origin", branch)
+
+        if (exec.exitValue != 0) {
+            throw ExecException("Couldn't push $branch: $stderr")
+        }
+
+        logger.info(stdout)
+        logger.info("${branch} pushed")
+    }
+
+    private fun execute(vararg args: String): ExecutionResult {
+
+        val stdout = ByteArrayOutputStream()
+        val stderr = ByteArrayOutputStream()
 
         val exec = project.exec {
             it.isIgnoreExitValue = true
-            it.commandLine("git", "push", "origin", branch)
+            it.commandLine(args)
             it.workingDir = project.rootDir
-            it.standardOutput = pushStdout
-            it.errorOutput = pushStderr
+            it.standardOutput = stdout
+            it.errorOutput = stderr
         }
 
-        if (exec.exitValue != 0) {
-            throw ExecException("Couldn't push $branch: $pushStderr")
-        }
-
-        logger.info(pushStdout.toString().trim())
-        logger.info("${branch} pushed")
+        return ExecutionResult(exec, stdout.toString().trim(), stderr.toString().trim())
     }
 }
+
+data class ExecutionResult(val exec: ExecResult, val stdout: String, val stderr: String)
