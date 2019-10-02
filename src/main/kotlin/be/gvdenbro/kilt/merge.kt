@@ -169,7 +169,7 @@ open class GitMergeTask : DefaultTask() {
 
         val exec = project.exec {
             it.isIgnoreExitValue = true
-            it.commandLine(args)
+            it.commandLine(*args)
             it.workingDir = project.rootDir
             it.standardOutput = stdout
             it.errorOutput = stderr
