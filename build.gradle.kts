@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.ByteArrayOutputStream
 
 plugins {
+    `java-gradle-plugin`
     kotlin("jvm") version "1.3.41"
 }
 
@@ -20,6 +21,14 @@ dependencies {
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
+}
+
+gradlePlugin {
+    // Define the plugin
+    val greeting by plugins.creating {
+        id = "be.gvdenbro.kilt"
+        implementationClass = "be.gvdenbro.kilt.MeltingPotPlugin"
+    }
 }
 
 java {
