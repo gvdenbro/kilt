@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.io.ByteArrayOutputStream
 
 plugins {
@@ -21,6 +22,17 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+tasks {
+    withType<KotlinCompile>().configureEach {
+        kotlinOptions.jvmTarget = "1.8"
+    }
+}
+
 fun gitDescribeVersion(): String {
 
     val stdOut = ByteArrayOutputStream()
@@ -31,8 +43,8 @@ fun gitDescribeVersion(): String {
         workingDir = rootDir
     }
 
-    val gitDescribeMatchRegex = """(\d+)\.(\d+)-(\d+)-.*""".toRegex()
     val describe = stdOut.toString().trim()
+    val gitDescribeMatchRegex = """(\d+)\.(\d+)-(\d+)-.*""".toRegex()
 
     return gitDescribeMatchRegex.matchEntire(describe)
             ?.destructured
