@@ -38,7 +38,7 @@ open class KiltConfig {
         return ConfigureUtil.configure(closure, gocd)
     }
 
-    fun merge(source: String, destination: String) {
+    fun createMergeTask(source: String, destination: String) {
         val config = KiltMergeMappingConfig()
         config.source = source
         config.destination = destination
