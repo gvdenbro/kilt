@@ -68,8 +68,8 @@ class KiltPlugin : Plugin<Project> {
                 it.description = "Debug shit"
 
                 it.doLast {
-                    println("Config: $config")
-                    logger.info("Config: $config")
+                    println("Config: ${config.mergeDetails}")
+                    logger.info("Config: ${config.mergeDetails}")
                 }
             }
 
