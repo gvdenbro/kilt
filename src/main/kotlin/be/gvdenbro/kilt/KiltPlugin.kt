@@ -73,6 +73,8 @@ class KiltPlugin : Plugin<Project> {
                 config.mergeMappings.forEach { source, destination ->
 
                     val mergeTask = tasks.create("merge${source.capitalize()}To${destination.capitalize()}", GitMergeTask::class.java) {
+                        it.group = "gocd"
+                        it.description = "Tries to merge current checkout of branch '${source}' into remote branch '${destination}'"
                         it.source = source
                         it.destination = destination
                         it.userName = config.git.userName
@@ -83,6 +85,8 @@ class KiltPlugin : Plugin<Project> {
 
                     tasks.register("slackMerge${source.capitalize()}To${destination.capitalize()}", SlackPostToChannelTask::class.java) { slackTask ->
                         slackTask.doFirst {
+                            slackTask.group = "gocd"
+                            slackTask.description = "Tries to send message to slack with merge status"
                             configureSlackTask(slackTask, mergeTask, config)
                         }
                     }
