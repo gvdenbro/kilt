@@ -38,11 +38,11 @@ open class KiltConfig {
         return ConfigureUtil.configure(closure, gocd)
     }
 
-    fun merge(configure: KiltMergeConfig.() -> Unit) {
+    fun merges(configure: KiltMergeConfig.() -> Unit) {
         merges.configure()
     }
 
-    fun merge(closure: Closure<*>): KiltMergeConfig {
+    fun merges(closure: Closure<*>): KiltMergeConfig {
         return ConfigureUtil.configure(closure, merges)
     }
 }
