@@ -12,7 +12,7 @@ open class KiltConfig {
     val git = KiltGitConfig()
     val slack = KiltSlackConfig()
     val gocd = KiltGocdConfig()
-    val mergeDetails = LinkedHashMap<String, String>()
+    var mergeDetails = LinkedHashMap<String, String>()
 
     fun git(configure: KiltGitConfig.() -> Unit) {
         git.configure()
