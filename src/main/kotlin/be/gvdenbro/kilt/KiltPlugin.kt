@@ -12,7 +12,7 @@ open class KiltConfig {
     val git = KiltGitConfig()
     val slack = KiltSlackConfig()
     val gocd = KiltGocdConfig()
-    var mergeDetails = LinkedHashMap<String, String>()
+    var mergeMappings = LinkedHashMap<String, String>()
 
     fun git(configure: KiltGitConfig.() -> Unit) {
         git.configure()
@@ -45,7 +45,7 @@ open class KiltGitConfig {
 }
 
 open class KiltSlackConfig {
-    lateinit var hookURL: URL
+    lateinit var hookURL: String
 }
 
 open class KiltGocdConfig {
@@ -70,7 +70,7 @@ class KiltPlugin : Plugin<Project> {
 
             afterEvaluate {
 
-                config.mergeDetails.forEach { source, destination ->
+                config.mergeMappings.forEach { source, destination ->
 
                     val mergeTask = tasks.create("merge${source.capitalize()}To${destination.capitalize()}", GitMergeTask::class.java) {
                         it.source = source
@@ -81,7 +81,7 @@ class KiltPlugin : Plugin<Project> {
                         it.finalizedBy("slackMerge${source.capitalize()}To${destination.capitalize()}")
                     }
 
-                    tasks.create("slackMerge${source.capitalize()}To${destination.capitalize()}", SlackPostToChannelTask::class.java) { slackTask ->
+                    tasks.register("slackMerge${source.capitalize()}To${destination.capitalize()}", SlackPostToChannelTask::class.java) { slackTask ->
                         slackTask.doFirst {
                             configureSlackTask(slackTask, mergeTask, config)
                         }
@@ -95,7 +95,7 @@ class KiltPlugin : Plugin<Project> {
 
         val gocdConfig = config.gocd
 
-        slackTask.slackHookURL = config.slack.hookURL
+        slackTask.slackHookURL = URL(config.slack.hookURL)
         slackTask.titleLink = URL("${gocdConfig.url}/tab/build/detail/${gocdConfig.pipeline}/${gocdConfig.pipelineCounter}/${gocdConfig.stage}/${gocdConfig.stageCounter}/${gocdConfig.job}")
 
         if (mergeTask.state.failure != null) {
