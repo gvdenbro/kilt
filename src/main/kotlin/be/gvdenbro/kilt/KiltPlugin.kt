@@ -73,16 +73,19 @@ class KiltPlugin : Plugin<Project> {
                 }
             }
 
-            println("Before Config: ${config.mergeDetails}")
-            logger.info("Before Config: ${config.mergeDetails}")
+            afterEvaluate {
 
-            config.mergeDetails.forEach { source, destination ->
+                println("afterEvaluate Config: ${config.mergeDetails}")
+                logger.info("afterEvaluate Config: ${config.mergeDetails}")
 
-                val task = tasks.create("merge$source$destination", GitMergeTask::class.java) {
-                    it.source = source
-                    it.destination = destination
-                    it.userName = config.git.userName
-                    it.userEmail = config.git.userEmail
+                config.mergeDetails.forEach { source, destination ->
+
+                    val task = tasks.create("merge$source$destination", GitMergeTask::class.java) {
+                        it.source = source
+                        it.destination = destination
+                        it.userName = config.git.userName
+                        it.userEmail = config.git.userEmail
+                    }
                 }
             }
         }
