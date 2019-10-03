@@ -6,8 +6,18 @@ import org.gradle.api.tasks.TaskAction
 import java.net.HttpURLConnection
 import java.net.URL
 
+// https://api.slack.com/changelog/2018-04-truncating-really-long-messages
+val slackMaxTextLength = 40_000
+
 data class SlackMessage(val attachments: List<SlackMessageAttachment>)
 data class SlackMessageAttachment(val title: String, val title_link: URL, val pretext: String?, val text: String, val color: String)
+
+fun truncateIfNecessary(text: String): String {
+    if (text.length > slackMaxTextLength) {
+        return text.take(slackMaxTextLength - 1) + Typography.ellipsis
+    }
+    return text
+}
 
 open class SlackPostToChannelTask : DefaultTask() {
 
@@ -30,7 +40,7 @@ open class SlackPostToChannelTask : DefaultTask() {
         connection.doOutput = true
         connection.connectTimeout = 10000
 
-        val slackMessage = SlackMessage(attachments = listOf(SlackMessageAttachment(title = title, title_link = titleLink, pretext = pretext, text = text, color = color)))
+        val slackMessage = SlackMessage(attachments = listOf(SlackMessageAttachment(title = title, title_link = titleLink, pretext = pretext, text = truncateIfNecessary(text), color = color)))
 
         connection.outputStream.use {
             it.write(klaxon.toJsonString(slackMessage).toByteArray())
