@@ -12,7 +12,7 @@ open class KiltConfig {
     val git = KiltGitConfig()
     val slack = KiltSlackConfig()
     val gocd = KiltGocdConfig()
-    var mergeMappings = LinkedHashMap<String, String>()
+    var merges = KiltMergeConfig()
 
     fun git(configure: KiltGitConfig.() -> Unit) {
         git.configure()
@@ -37,6 +37,14 @@ open class KiltConfig {
     fun gocd(closure: Closure<*>): KiltGocdConfig {
         return ConfigureUtil.configure(closure, gocd)
     }
+
+    fun merge(configure: KiltMergeConfig.() -> Unit) {
+        merges.configure()
+    }
+
+    fun merge(closure: Closure<*>): KiltMergeConfig {
+        return ConfigureUtil.configure(closure, merges)
+    }
 }
 
 open class KiltGitConfig {
@@ -57,6 +65,37 @@ open class KiltGocdConfig {
     lateinit var job: String
 }
 
+open class KiltMergeConfig {
+
+    val mappings = ArrayList<KiltMergeMappingConfig>()
+
+    fun map(configure: KiltMergeMappingConfig.() -> Unit) {
+        val mergeMapping = KiltMergeMappingConfig()
+        mergeMapping.configure()
+        mappings.add(mergeMapping)
+    }
+
+    fun map(closure: Closure<*>): KiltMergeMappingConfig {
+        val mergeMapping = KiltMergeMappingConfig()
+        mappings.add(mergeMapping)
+        return ConfigureUtil.configure(closure, mergeMapping)
+    }
+}
+
+open class KiltMergeMappingConfig {
+
+    lateinit var source: String
+    lateinit var destination: String
+
+    operator fun component1(): String {
+        return source
+    }
+
+    operator fun component2(): String {
+        return destination
+    }
+}
+
 /**
  * this plugin integrates GoCD/Git/Slack into one whole. It is not meant to be reusable.
  */
@@ -70,7 +109,7 @@ class KiltPlugin : Plugin<Project> {
 
             afterEvaluate {
 
-                config.mergeMappings.forEach { source, destination ->
+                config.merges.mappings.forEach { (source, destination) ->
 
                     val mergeTask = tasks.create("merge${source.capitalize()}To${destination.capitalize()}", GitMergeTask::class.java) {
                         it.group = "gocd"
