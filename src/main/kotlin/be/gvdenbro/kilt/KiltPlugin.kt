@@ -49,7 +49,12 @@ open class KiltSlackConfig {
 }
 
 open class KiltGocdConfig {
-    lateinit var url: URL
+    lateinit var url: String
+    lateinit var pipeline: String
+    lateinit var pipelineCounter: String
+    lateinit var stage: String
+    lateinit var stageCounter: String
+    lateinit var job: String
 }
 
 /**
@@ -63,31 +68,46 @@ class KiltPlugin : Plugin<Project> {
 
             val config = extensions.create("kilt", KiltConfig::class.java)
 
-            task("debugKilt") {
-                it.group = "Help"
-                it.description = "Debug shit"
-
-                it.doLast {
-                    println("Config: ${config.mergeDetails}")
-                    logger.info("Config: ${config.mergeDetails}")
-                }
-            }
-
             afterEvaluate {
-
-                println("afterEvaluate Config: ${config.mergeDetails}")
-                logger.info("afterEvaluate Config: ${config.mergeDetails}")
 
                 config.mergeDetails.forEach { source, destination ->
 
-                    val task = tasks.create("merge$source$destination", GitMergeTask::class.java) {
+                    val mergeTask = tasks.create("merge${source.capitalize()}To${destination.capitalize()}", GitMergeTask::class.java) {
                         it.source = source
                         it.destination = destination
                         it.userName = config.git.userName
                         it.userEmail = config.git.userEmail
+
+                        it.finalizedBy("slackMerge${source.capitalize()}To${destination.capitalize()}")
+                    }
+
+                    tasks.create("slackMerge${source.capitalize()}To${destination.capitalize()}", SlackPostToChannelTask::class.java) { slackTask ->
+                        slackTask.doFirst {
+                            configureSlackTask(slackTask, mergeTask, config)
+                        }
                     }
                 }
             }
+        }
+    }
+
+    fun configureSlackTask(slackTask : SlackPostToChannelTask, mergeTask: GitMergeTask, config: KiltConfig) {
+
+        val gocdConfig = config.gocd
+
+        slackTask.slackHookURL = config.slack.hookURL
+        slackTask.titleLink = URL("${gocdConfig.url}/tab/build/detail/${gocdConfig.pipeline}/${gocdConfig.pipelineCounter}/${gocdConfig.stage}/${gocdConfig.stageCounter}/${gocdConfig.job}")
+
+        if (mergeTask.state.failure != null) {
+            val cause = if (mergeTask.state.failure?.cause != null) mergeTask.state.failure?.cause?.message else mergeTask.state.failure?.message
+            slackTask.title = "${gocdConfig.pipeline}/${gocdConfig.stage} failed merge attempt"
+            slackTask.pretext = "Failed merging ${mergeTask.source} to ${mergeTask.destination}."
+            slackTask.text = "Please fix it manually: ${cause}"
+            slackTask.color = "danger"
+        } else {
+            slackTask.title = "${gocdConfig.pipeline}/${gocdConfig.stage} merge succeeded"
+            slackTask.text = "Succeeded merging ${mergeTask.source} to ${mergeTask.destination}"
+            slackTask.color = "good"
         }
     }
 }
