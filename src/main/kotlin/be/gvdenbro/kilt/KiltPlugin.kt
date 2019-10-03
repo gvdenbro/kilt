@@ -12,7 +12,7 @@ open class KiltConfig {
     val git = KiltGitConfig()
     val slack = KiltSlackConfig()
     val gocd = KiltGocdConfig()
-    var merges = KiltMergeConfig()
+    var merges = ArrayList<KiltMergeMappingConfig>()
 
     fun git(configure: KiltGitConfig.() -> Unit) {
         git.configure()
@@ -38,12 +38,11 @@ open class KiltConfig {
         return ConfigureUtil.configure(closure, gocd)
     }
 
-    fun merges(configure: KiltMergeConfig.() -> Unit) {
-        merges.configure()
-    }
-
-    fun merges(closure: Closure<*>): KiltMergeConfig {
-        return ConfigureUtil.configure(closure, merges)
+    fun merge(source: String, destination: String) {
+        val config = KiltMergeMappingConfig()
+        config.source = source
+        config.destination = destination
+        merges.add(config)
     }
 }
 
@@ -63,23 +62,6 @@ open class KiltGocdConfig {
     lateinit var stage: String
     lateinit var stageCounter: String
     lateinit var job: String
-}
-
-open class KiltMergeConfig {
-
-    val mappings = ArrayList<KiltMergeMappingConfig>()
-
-    fun map(configure: KiltMergeMappingConfig.() -> Unit) {
-        val mergeMapping = KiltMergeMappingConfig()
-        mergeMapping.configure()
-        mappings.add(mergeMapping)
-    }
-
-    fun map(closure: Closure<*>): KiltMergeMappingConfig {
-        val mergeMapping = KiltMergeMappingConfig()
-        mappings.add(mergeMapping)
-        return ConfigureUtil.configure(closure, mergeMapping)
-    }
 }
 
 open class KiltMergeMappingConfig {
@@ -109,7 +91,7 @@ class KiltPlugin : Plugin<Project> {
 
             afterEvaluate {
 
-                config.merges.mappings.forEach { (source, destination) ->
+                config.merges.forEach { (source, destination) ->
 
                     val mergeTask = tasks.create("merge${source.capitalize()}To${destination.capitalize()}", GitMergeTask::class.java) {
                         it.group = "gocd"
