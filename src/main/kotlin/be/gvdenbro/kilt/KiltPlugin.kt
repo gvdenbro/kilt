@@ -65,7 +65,7 @@ class KiltPlugin : Plugin<Project> {
 
             config.mergeDetails.forEach { source, destination ->
 
-                tasks.register("merge$source$destination", GitMergeTask::class.java) {
+                tasks.create("merge$source$destination", GitMergeTask::class.java) {
                     it.source = source
                     it.destination = destination
                     it.userName = config.git.userName
