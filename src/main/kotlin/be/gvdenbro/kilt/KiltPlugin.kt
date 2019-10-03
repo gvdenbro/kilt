@@ -63,6 +63,16 @@ class KiltPlugin : Plugin<Project> {
 
             val config = extensions.create("kilt", KiltConfig::class.java)
 
+            task("debugKilt") {
+                it.group = "Help"
+                it.description = "Debug shit"
+
+                it.doLast {
+                    println("Config: $config")
+                    logger.info("Config: $config")
+                }
+            }
+
             config.mergeDetails.forEach { source, destination ->
 
                 tasks.create("merge$source$destination", GitMergeTask::class.java) {
