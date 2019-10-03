@@ -105,9 +105,11 @@ class KiltPlugin : Plugin<Project> {
                     }
 
                     tasks.create("slackMerge${source.capitalize()}To${destination.capitalize()}", SlackPostToChannelTask::class.java) { slackTask ->
+
+                        slackTask.group = "gocd"
+                        slackTask.description = "Tries to send message to slack with merge status. Gets triggered automagically after 'merge${source.capitalize()}To${destination.capitalize()}'"
+
                         slackTask.doFirst {
-                            slackTask.group = "gocd"
-                            slackTask.description = "Tries to send message to slack with merge status"
                             configureSlackTask(slackTask, mergeTask, config)
                         }
                     }
@@ -116,7 +118,7 @@ class KiltPlugin : Plugin<Project> {
         }
     }
 
-    fun configureSlackTask(slackTask : SlackPostToChannelTask, mergeTask: GitMergeTask, config: KiltConfig) {
+    fun configureSlackTask(slackTask: SlackPostToChannelTask, mergeTask: GitMergeTask, config: KiltConfig) {
 
         val gocdConfig = config.gocd
 
