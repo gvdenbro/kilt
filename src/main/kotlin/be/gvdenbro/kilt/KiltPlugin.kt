@@ -6,10 +6,23 @@ import org.gradle.api.Project
 import java.net.URL
 
 open class KiltConfig {
-    var git = KiltGitConfig()
-    var slack = KiltSlackConfig()
-    var gocd = KiltGocdConfig()
-    var mergeDetails = LinkedHashMap<String, String>()
+
+    val git = KiltGitConfig()
+    val slack = KiltSlackConfig()
+    val gocd = KiltGocdConfig()
+    val mergeDetails = LinkedHashMap<String, String>()
+
+    fun git(configure: KiltGitConfig.() -> Unit) {
+        git.configure()
+    }
+
+    fun slack(configure: KiltSlackConfig.() -> Unit) {
+        slack.configure()
+    }
+
+    fun gocd(configure: KiltGocdConfig.() -> Unit) {
+        gocd.configure()
+    }
 }
 
 open class KiltGitConfig {
