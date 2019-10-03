@@ -1,7 +1,9 @@
 package be.gvdenbro.kilt
 
+import groovy.lang.Closure
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.util.ConfigureUtil
 
 import java.net.URL
 
@@ -16,12 +18,24 @@ open class KiltConfig {
         git.configure()
     }
 
+    fun git(closure: Closure<*>): KiltGitConfig {
+        return ConfigureUtil.configure(closure, git)
+    }
+
     fun slack(configure: KiltSlackConfig.() -> Unit) {
         slack.configure()
     }
 
+    fun slack(closure: Closure<*>): KiltSlackConfig {
+        return ConfigureUtil.configure(closure, slack)
+    }
+
     fun gocd(configure: KiltGocdConfig.() -> Unit) {
         gocd.configure()
+    }
+
+    fun gocd(closure: Closure<*>): KiltGocdConfig {
+        return ConfigureUtil.configure(closure, gocd)
     }
 }
 
