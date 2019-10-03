@@ -73,6 +73,9 @@ class KiltPlugin : Plugin<Project> {
                 }
             }
 
+            println("Before Config: ${config.mergeDetails}")
+            logger.info("Before Config: ${config.mergeDetails}")
+
             config.mergeDetails.forEach { source, destination ->
 
                 val task = tasks.create("merge$source$destination", GitMergeTask::class.java) {
