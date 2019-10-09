@@ -38,10 +38,11 @@ open class KiltConfig {
         return ConfigureUtil.configure(closure, gocd)
     }
 
-    fun createMergeTask(source: String, destination: String) {
+    fun createMergeTask(source: String, destination: String, sendMessageOnFailureOnly: Boolean) {
         val config = KiltMergeMappingConfig()
         config.source = source
         config.destination = destination
+        config.sendMessageOnFailureOnly = sendMessageOnFailureOnly
         merges.add(config)
     }
 }
@@ -68,6 +69,7 @@ open class KiltMergeMappingConfig {
 
     lateinit var source: String
     lateinit var destination: String
+    var sendMessageOnFailureOnly : Boolean = false
 
     operator fun component1(): String {
         return source
@@ -75,6 +77,10 @@ open class KiltMergeMappingConfig {
 
     operator fun component2(): String {
         return destination
+    }
+
+    operator fun component3(): Boolean {
+        return sendMessageOnFailureOnly
     }
 }
 
@@ -91,7 +97,7 @@ class KiltPlugin : Plugin<Project> {
 
             afterEvaluate {
 
-                config.merges.forEach { (source, destination) ->
+                config.merges.forEach { (source, destination, sendMessageOnFailureOnly) ->
 
                     val mergeTask = tasks.create("merge${source.capitalize()}To${destination.capitalize()}", GitMergeTask::class.java) {
                         it.group = "gocd"
@@ -110,7 +116,7 @@ class KiltPlugin : Plugin<Project> {
                         slackTask.description = "Tries to send a message to slack with merge status. Gets triggered automagically after 'merge${source.capitalize()}To${destination.capitalize()}'"
 
                         slackTask.doFirst {
-                            configureSlackTask(slackTask, mergeTask, config)
+                            configureSlackTask(slackTask, sendMessageOnFailureOnly, mergeTask, config)
                         }
                     }
                 }
@@ -118,7 +124,7 @@ class KiltPlugin : Plugin<Project> {
         }
     }
 
-    fun configureSlackTask(slackTask: SlackPostToChannelTask, mergeTask: GitMergeTask, config: KiltConfig) {
+    fun configureSlackTask(slackTask: SlackPostToChannelTask, sendMessageOnFailureOnly: Boolean, mergeTask: GitMergeTask, config: KiltConfig) {
 
         val gocdConfig = config.gocd
 
@@ -131,10 +137,12 @@ class KiltPlugin : Plugin<Project> {
             slackTask.pretext = "Failed merging ${mergeTask.source} to ${mergeTask.destination}."
             slackTask.text = "Please fix it manually: ${cause}"
             slackTask.color = "danger"
+            slackTask.shouldSendMessage = true
         } else {
             slackTask.title = "${gocdConfig.pipeline}/${gocdConfig.stage} merge succeeded"
             slackTask.text = "Succeeded merging ${mergeTask.source} to ${mergeTask.destination}"
             slackTask.color = "good"
+            slackTask.shouldSendMessage = !sendMessageOnFailureOnly
         }
     }
 }

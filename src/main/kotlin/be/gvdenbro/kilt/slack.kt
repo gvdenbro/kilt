@@ -27,26 +27,32 @@ open class SlackPostToChannelTask : DefaultTask() {
     var pretext: String? = null
     lateinit var text: String
     lateinit var color: String
+    var shouldSendMessage: Boolean = true
 
     @TaskAction
     fun post() {
 
-        logger.info("Posting to slack")
+        logger.info("Will try to send slack message: $shouldSendMessage")
 
-        val connection = slackHookURL.openConnection() as HttpURLConnection
+        if (shouldSendMessage) {
 
-        connection.requestMethod = "POST"
-        connection.setRequestProperty("Content-type", "application/json")
-        connection.doOutput = true
-        connection.connectTimeout = 10000
+            logger.info("Posting to slack")
 
-        val slackMessage = SlackMessage(attachments = listOf(SlackMessageAttachment(title = title, title_link = titleLink, pretext = pretext, text = truncateIfNecessary(text), color = color)))
+            val connection = slackHookURL.openConnection() as HttpURLConnection
 
-        connection.outputStream.use {
-            it.write(klaxon.toJsonString(slackMessage).toByteArray())
+            connection.requestMethod = "POST"
+            connection.setRequestProperty("Content-type", "application/json")
+            connection.doOutput = true
+            connection.connectTimeout = 10000
+
+            val slackMessage = SlackMessage(attachments = listOf(SlackMessageAttachment(title = title, title_link = titleLink, pretext = pretext, text = truncateIfNecessary(text), color = color)))
+
+            connection.outputStream.use {
+                it.write(klaxon.toJsonString(slackMessage).toByteArray())
+            }
+
+            logger.info("Posted to slack message ${slackMessage} with response code ${connection.responseCode}")
         }
-
-        logger.info("Posted to slack message ${slackMessage} with response code ${connection.responseCode}")
     }
 
     companion object {
